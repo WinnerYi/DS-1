@@ -2,11 +2,43 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-//fefwfwefewfewfewfefefewfewffwefewfewfefwefwefewf
-// fgfggfefefefeefe
-// gt
+
+/*
+原始迷宮所採用的字符定義如下：
+1. 字符'O'表示障礙物 (Obstacle)
+2. 字符'E'表示空格 (Empty cell)
+3. 字符'G'表示目標 (Goal)，抵達這個位置後，也視同一個可以行走的空格。
+   程式輸出所採用的字符定義如下：
+4. 字符'V'表示曾經走過的位置 (Visited)
+5. 字符'R'表示成功可行的路徑 (Route)
+*/
+
 void PrintTitle ();
 void SkipSpace(std::string &str);
+void fetchFile() {
+  std::ifstream in;
+  std::string file_num;
+  std:: cout << "Input a file number: ";
+  std::getline(std::cin, file_num);
+  printf("\n");
+  SkipSpace(file_num);
+  std::string txt_path = "input" + file_num + ".txt";
+  in.open(txt_path);
+  if(in.fail()){ 
+    std::cout <<  txt_path + "does not exist!";
+    return; 
+  }
+  int columns;
+  int rows;
+  std::string res;
+  in >> columns;
+  in >> rows;
+  std::cout << columns * rows << std::endl;
+  while(std::getline(in, res)) {
+    std::cout << res << std::endl;
+  }
+  
+}
 // Class Declaration
 class Maze {
  public:
@@ -19,18 +51,8 @@ class Maze {
     }
 
 
-    void taskOne(std::string file_num) { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
-      std::ifstream in;
-      std::ofstream out;
-      std::string txt_path = "input" + file_num + ".txt";
-      in.open(txt_path);
-      if(in.fail()){ 
-        std::cout <<  txt_path + "does not exist!";
-        return; 
-      }
-      std::string res;
-      in >> res;
-      std::cout << res;
+    void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
+      
       
 
 
@@ -50,7 +72,7 @@ class Maze {
 };
 int main() {
   while (true) {
-    Maze m;
+    Maze maze;
     std::string cmd, file_num;
     PrintTitle();
     std::getline(std::cin, cmd);
@@ -59,11 +81,8 @@ int main() {
     if (cmd == "0" || cmd.empty()) {
       return 0;
     } else if (cmd == "1") {
-      std:: cout << "Input a file number: ";
-      std::getline(std::cin, file_num);
-      printf("\n");
-      SkipSpace(file_num);
-      m.taskOne(file_num);
+      fetchFile();
+      maze.taskOne();
       
     } else if (cmd == "2") {
       
