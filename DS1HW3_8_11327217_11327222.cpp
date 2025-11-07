@@ -13,8 +13,7 @@
 5. 字符'R'表示成功可行的路徑 (Route)
 */
 struct Coordinate {
-  int x;
-  int y;
+  int y, x;  // 往下是正, 往右是正
 };
 
 void PrintTitle();
@@ -24,23 +23,25 @@ void SkipSpace(std::string &str);
 class Stack{
  private:
   struct StackNode{ 
-    Coordinate item; // a coordinate(x, y)is an item
+    Coordinate coordinate_item; // a coordinate(x, y)is an coordinate_item
     StackNode *next;
   }; // end StackNode
   StackNode *topPtr;
  public:
-  Stack();
+  Stack() {
+    topPtr = nullptr;
+  }
   Stack(const Stack& aStack) {
     if (aStack.topPtr == NULL) {
       topPtr = NULL; // original list is empty
     } else {
       topPtr = new StackNode;
-      topPtr->item = aStack.topPtr->item;
+      topPtr->coordinate_item = aStack.topPtr->coordinate_item;
       StackNode *newPtr = topPtr;
       for (StackNode *origPtr = aStack.topPtr->next; origPtr != NULL; origPtr = origPtr->next) {
          newPtr->next = new StackNode;
         newPtr = newPtr->next;
-        newPtr->item = origPtr->item;
+        newPtr->coordinate_item = origPtr->coordinate_item;
       } // end for
     newPtr->next = NULL;
     } // end if-else
@@ -60,10 +61,10 @@ class Stack{
   //避免複製例外物件（效率更好）
   //確保多型行為正確
   //e.what() 會輸出錯誤訊息（通常是 "std::bad_alloc"）
-  void push(const Coordinate& newItem) {
+  void push(const Coordinate& newcoordinate_Item) {
     try { 
         StackNode *newPtr = new StackNode;
-        newPtr->item = newItem;
+        newPtr->coordinate_item = newcoordinate_Item;
         newPtr->next = topPtr;
         topPtr = newPtr;
     } // end try
@@ -81,12 +82,12 @@ class Stack{
   }
   void getTop(Coordinate& stackTop) {
     if (!isEmpty()) {
-      stackTop = topPtr->item;
+      stackTop = topPtr->coordinate_item;
     }
   }
   void pop(Coordinate& stackTop) {
     if (!isEmpty()) {
-      stackTop = topPtr->item;
+      stackTop = topPtr->coordinate_item;
       StackNode *temp = topPtr;
       topPtr = topPtr->next;
       temp->next = NULL;
@@ -120,7 +121,6 @@ class Maze {
       std::string file_num;
       std:: cout << "Input a file number: ";
       std::getline(std::cin, file_num);
-      printf("\n");
       SkipSpace(file_num);
       std::string txt_path = "input" + file_num + ".txt";
       in.open(txt_path);
@@ -144,13 +144,68 @@ class Maze {
       } 
       in.close();
     }
-    bool Dfs(Maze &maze, int r, int c) {
+    void Dfs() {
+      bool success = false;
+      Stack path;
+      Coordinate start;
+      start.y = 0;
+      start.x = 0;// y first, then x    
+      path.push(start);  
+      int dx[4] = {1, 0, -1, 0}; // 右下左上
+      int dy[4] = {0, 1, 0, -1};  
 
-  
+      int dir = 0; //右邊開始
+
+      while (!path.isEmpty()) {
+        Coordinate cur;
+        path.getTop(cur);
+        
+        if (visited_grid[cur.y][cur.x] == 'G') {
+          success = true;
+          return;
+        }
+        
+        bool moved = false;
+        for (int i = 0; i < 4; i++) {
+          int ndir = (dir + i) % 4;
+          
+          int nx = cur.x + dx[ndir];
+          int ny = cur.y + dy[ndir];
+          
+          if ((0 <= nx && nx < maze_columns) && (0 <= ny && ny < maze_rows) && (visited_grid[ny][nx] != 'V') && (visited_grid[ny][nx] != 'O')) {
+            Coordinate temp;
+            temp.y = ny;
+            temp.x = nx;
+            dir = ndir;
+            if (visited_grid[cur.y][cur.x] == 'G') {
+              success = true;
+              return;
+            } else {
+              visited_grid[cur.y][cur.x] = 'V';
+            }
+       
+            path.push(temp);
+            moved = true;
+            break;
+          }
+        }
+        if (!moved) {
+          path.pop();
+        }
+
+
+      }
+      if (!success) printf("fuck");
   
     }
     void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
-      
+      Dfs();
+      for (int i = 0; i < maze_rows; i++) {
+        if (i != 0) printf("\n");
+        for (int j = 0; j < maze_columns; j++) {
+          std::cout << visited_grid[i][j];
+        }
+      } 
       
 
 
@@ -174,7 +229,6 @@ int main() {
     std::string cmd, file_num;
     PrintTitle();
     std::getline(std::cin, cmd);
-    printf("\n");
     SkipSpace(cmd);
     if (cmd == "0" || cmd.empty()) {
       return 0;
