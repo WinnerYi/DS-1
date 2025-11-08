@@ -171,6 +171,10 @@ class Maze {
       while (!path.isEmpty()) {
         path.getTop(temp_coor);
         if (route_grid[temp_coor.y][temp_coor.x]!= 'G') route_grid[temp_coor.y][temp_coor.x] = 'R';
+        if (maze_grid[temp_coor.y][temp_coor.x]== 'G') {
+          route_grid[temp_coor.y][temp_coor.x] = 'G';
+          visited_grid[temp_coor.y][temp_coor.x]= 'G';
+        }
         path.pop();
       }
     }
@@ -231,7 +235,6 @@ class Maze {
 
       }
       can_go_to_goal = false;
-  
     }
     void Dfs2(int int_input_goals, bool &success) { // for task 2
       bool has_visited_goal[maze_rows][maze_columns];
@@ -262,14 +265,14 @@ class Maze {
           if (count_goal == int_input_goals) {
             success = true;
             if (!path.isEmpty())  {
-            path.pop();
-          }
+              path.pop();
+            }
           bestRoutine(path);
           return;
           }
           
         }
-        if (visited_grid[cur.y][cur.x] != 'G') visited_grid[cur.y][cur.x] = 'V';
+        visited_grid[cur.y][cur.x] = 'V';
         bool moved = false;
         for (int i = 0; i < 4; i++) {
           int ndir = (dir + i) % 4;
@@ -277,24 +280,21 @@ class Maze {
           int nx = cur.x + dx[ndir];
           int ny = cur.y + dy[ndir];
           
-          if ((0 <= nx && nx < maze_columns) && (0 <= ny && ny < maze_rows) && (visited_grid[ny][nx] != 'V') && (visited_grid[ny][nx] != 'G') && (visited_grid[ny][nx] != 'O')) {
+          if ((0 <= nx && nx < maze_columns) && (0 <= ny && ny < maze_rows) && (visited_grid[ny][nx] != 'V') &&(visited_grid[ny][nx] != 'O')) {
             Coordinate temp;
             temp.y = ny;
             temp.x = nx;
             dir = ndir;
-            if (visited_grid[temp.y][temp.x] == 'G'&& !has_visited_goal[temp.y][temp.x]) {
+            if (visited_grid[temp.y][temp.x] == 'G' && !has_visited_goal[temp.y][temp.x]) {
               count_goal++;
               has_visited_goal[temp.y][temp.x] = true;
               if (count_goal == int_input_goals) {
                 success = true;
-                if (!path.isEmpty())  {
-                 path.pop();
-                }
                 bestRoutine(path);
                 return;
               }
             } else {
-              if (visited_grid[temp.y][temp.x] != 'G') visited_grid[temp.y][temp.x]= 'V';
+              visited_grid[temp.y][temp.x]= 'V';
             }
        
             path.push(temp);
@@ -309,6 +309,11 @@ class Maze {
 
       }
       success = false;
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          if (maze_grid[i][j] == 'G') visited_grid[i][j] = 'G';
+        }
+      }
   
     }
     void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
@@ -327,8 +332,8 @@ class Maze {
           }
           printf("\n");
         } 
-        
       }
+      printf("\n\n");
     }
 
     void taskTwo() { // 從左上角出發(依照指定行走模式)走過 N 個目標的一條路徑
@@ -366,9 +371,8 @@ class Maze {
           }
           printf("\n");
         } 
-        
       }
-        
+      printf("\n");
     }
 
     void taskThree() { // 從左上角出發(依照指定行走模式)走過所有目標 G 以計算總數
@@ -396,10 +400,11 @@ int main() {
         maze1_is_empty = false;
         maze1.taskOne();
       }
-      
+      continue;
     } else if (cmd == "2") {
       if (!maze1_is_empty) {
         maze1.taskTwo();
+        continue;
       } else {
         std::cout << "### Execute command 1 to load a maze! ###\n";
       }
