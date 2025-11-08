@@ -18,6 +18,7 @@ struct Coordinate {
 
 void PrintTitle();
 void SkipSpace(std::string &str);
+std::string ReadInput();
 
 // Class Declaration
 class Stack{
@@ -100,12 +101,15 @@ class Maze {
   char **maze_grid; // 採用 C++標準函式 new 動態配置陣列以儲存迷宮。
   char **visited_grid;
   char **route_grid;
-  
+  bool can_go_to_goal = false;
   int maze_rows;
   int maze_columns;
  public:
     Maze() {}
     ~Maze() {
+      resetMaze();
+    }
+    void resetMaze() {
       for (int i = 0; i < maze_rows; i++) {
         delete[] maze_grid[i];
         delete[] visited_grid[i];
@@ -114,19 +118,17 @@ class Maze {
       delete[] maze_grid;
       delete[] visited_grid;
       delete[] route_grid;
-
+      can_go_to_goal = false;
     }
-    void fetchFile() {
+    bool fetchFile() {
       std::ifstream in;
-      std::string file_num;
       std:: cout << "Input a file number: ";
-      std::getline(std::cin, file_num);
-      SkipSpace(file_num);
+      std::string file_num = ReadInput();
       std::string txt_path = "input" + file_num + ".txt";
       in.open(txt_path);
       if(in.fail()){ 
-        std::cout <<  txt_path + "does not exist!";
-        return; 
+        std::cout << std::endl << txt_path + " does not exist!\n";
+        return false; 
       }
       in >>  maze_columns >> maze_rows;
       maze_grid = new char*[maze_rows];
@@ -143,9 +145,19 @@ class Maze {
         }
       } 
       in.close();
+      return true;
     }
-    void Dfs() {
-      bool success = false;
+    void bestroutine(Stack path) {
+      
+      Coordinate temp_coor;
+      
+      while (!path.isEmpty()) {
+        path.getTop(temp_coor);
+        route_grid[temp_coor.y][temp_coor.x] = 'R';
+        path.pop();
+      }
+    }
+    void Dfs() { // for task 1
       Stack path;
       Coordinate start;
       start.y = 0;
@@ -153,18 +165,23 @@ class Maze {
       path.push(start);  
       int dx[4] = {1, 0, -1, 0}; // 右下左上
       int dy[4] = {0, 1, 0, -1};  
-
+  
       int dir = 0; //右邊開始
-
+    
       while (!path.isEmpty()) {
         Coordinate cur;
         path.getTop(cur);
         
         if (visited_grid[cur.y][cur.x] == 'G') {
-          success = true;
+          can_go_to_goal = true;
+          if (!path.isEmpty())  {
+            path.pop();
+          }
+          bestroutine(path);
+          
           return;
         }
-        
+        visited_grid[cur.y][cur.x] = 'V';
         bool moved = false;
         for (int i = 0; i < 4; i++) {
           int ndir = (dir + i) % 4;
@@ -177,11 +194,12 @@ class Maze {
             temp.y = ny;
             temp.x = nx;
             dir = ndir;
-            if (visited_grid[cur.y][cur.x] == 'G') {
-              success = true;
+            if (visited_grid[temp.y][temp.x] == 'G') {
+              can_go_to_goal = true;
+              bestroutine(path);
               return;
             } else {
-              visited_grid[cur.y][cur.x] = 'V';
+              visited_grid[temp.y][temp.x] = 'V';
             }
        
             path.push(temp);
@@ -195,17 +213,27 @@ class Maze {
 
 
       }
-      if (!success) printf("fuck");
+      can_go_to_goal = false;
   
     }
     void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
       Dfs();
       for (int i = 0; i < maze_rows; i++) {
-        if (i != 0) printf("\n");
         for (int j = 0; j < maze_columns; j++) {
           std::cout << visited_grid[i][j];
         }
+        printf("\n");
       } 
+      printf("\n");
+      if (can_go_to_goal) {
+        for (int i = 0; i < maze_rows; i++) {
+          for (int j = 0; j < maze_columns; j++) {
+            std::cout << route_grid[i][j];
+          }
+          printf("\n");
+        } 
+        
+      }
       
 
 
@@ -224,17 +252,22 @@ class Maze {
     }
 };
 int main() {
+  Maze maze1; // for task1, 2, 3
+  bool maze1_is_empty = true;
   while (true) {
-    Maze maze1; // for task1, 2, 3
-    std::string cmd, file_num;
+    
+    
     PrintTitle();
-    std::getline(std::cin, cmd);
-    SkipSpace(cmd);
-    if (cmd == "0" || cmd.empty()) {
+    std::string cmd = ReadInput();
+    printf("\n");
+    if (cmd == "0") {
       return 0;
     } else if (cmd == "1") {
-      maze1.fetchFile();
-      maze1.taskOne();
+      if (!maze1_is_empty) maze1.resetMaze();
+      if (maze1.fetchFile()) {
+        maze1_is_empty = false;
+        maze1.taskOne();
+      }
       
     } else if (cmd == "2") {
       
@@ -249,6 +282,17 @@ int main() {
     printf("\n");  
   }
 
+}
+
+std::string ReadInput() {
+  std::string input;
+  while (1) {
+    std::getline(std::cin, input);
+    SkipSpace(input);
+    if (input.empty()) continue;
+    else break;
+  }
+  return input;
 }
 
 
