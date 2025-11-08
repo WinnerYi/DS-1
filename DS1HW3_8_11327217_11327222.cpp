@@ -19,6 +19,7 @@ struct Coordinate {
 void PrintTitle();
 void SkipSpace(std::string &str);
 std::string ReadInput();
+bool isNonNegInt (std::string s);
 
 // Class Declaration
 class Stack{
@@ -107,9 +108,9 @@ class Maze {
  public:
     Maze() {}
     ~Maze() {
-      resetMaze();
+      deleteMaze();
     }
-    void resetMaze() {
+    void deleteMaze() {
       for (int i = 0; i < maze_rows; i++) {
         delete[] maze_grid[i];
         delete[] visited_grid[i];
@@ -119,6 +120,24 @@ class Maze {
       delete[] visited_grid;
       delete[] route_grid;
       can_go_to_goal = false;
+    }
+    void resetVisitRoutine() {
+      for (int i = 0; i < maze_rows; i++) {
+        delete[] visited_grid[i];
+        delete[] route_grid[i];
+      }
+      delete[] visited_grid;
+      delete[] route_grid;
+      visited_grid = new char*[maze_rows];
+      route_grid = new char*[maze_rows];
+      for (int i = 0; i < maze_rows; i++) {
+        visited_grid[i] = new char[maze_columns];
+        route_grid[i] = new char[maze_columns];
+        for (int j = 0; j < maze_columns; j++) {
+          visited_grid[i][j] = maze_grid[i][j];
+          route_grid[i][j] = maze_grid[i][j];
+        }
+      } 
     }
     bool fetchFile() {
       std::ifstream in;
@@ -147,13 +166,11 @@ class Maze {
       in.close();
       return true;
     }
-    void bestroutine(Stack path) {
-      
+    void bestRoutine(Stack path) {
       Coordinate temp_coor;
-      
       while (!path.isEmpty()) {
         path.getTop(temp_coor);
-        route_grid[temp_coor.y][temp_coor.x] = 'R';
+        if (route_grid[temp_coor.y][temp_coor.x]!= 'G') route_grid[temp_coor.y][temp_coor.x] = 'R';
         path.pop();
       }
     }
@@ -177,7 +194,7 @@ class Maze {
           if (!path.isEmpty())  {
             path.pop();
           }
-          bestroutine(path);
+          bestRoutine(path);
           
           return;
         }
@@ -196,7 +213,7 @@ class Maze {
             dir = ndir;
             if (visited_grid[temp.y][temp.x] == 'G') {
               can_go_to_goal = true;
-              bestroutine(path);
+              bestRoutine(path);
               return;
             } else {
               visited_grid[temp.y][temp.x] = 'V';
@@ -214,6 +231,84 @@ class Maze {
 
       }
       can_go_to_goal = false;
+  
+    }
+    void Dfs2(int int_input_goals, bool &success) { // for task 2
+      bool has_visited_goal[maze_rows][maze_columns];
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          has_visited_goal[i][j] = false;
+        }
+      }
+      resetVisitRoutine();
+      int count_goal = 0;
+      Stack path;
+      Coordinate start;
+      start.y = 0;
+      start.x = 0;// y first, then x    
+      path.push(start);  
+      int dx[4] = {1, 0, -1, 0}; // 右下左上
+      int dy[4] = {0, 1, 0, -1};  
+  
+      int dir = 0; //右邊開始
+    
+      while (!path.isEmpty()) {
+        Coordinate cur;
+        path.getTop(cur);
+        
+        if (visited_grid[cur.y][cur.x] == 'G' && !has_visited_goal[cur.y][cur.x]) {
+          count_goal++;
+          has_visited_goal[cur.y][cur.x] = true;
+          if (count_goal == int_input_goals) {
+            success = true;
+            if (!path.isEmpty())  {
+            path.pop();
+          }
+          bestRoutine(path);
+          return;
+          }
+          
+        }
+        if (visited_grid[cur.y][cur.x] != 'G') visited_grid[cur.y][cur.x] = 'V';
+        bool moved = false;
+        for (int i = 0; i < 4; i++) {
+          int ndir = (dir + i) % 4;
+          
+          int nx = cur.x + dx[ndir];
+          int ny = cur.y + dy[ndir];
+          
+          if ((0 <= nx && nx < maze_columns) && (0 <= ny && ny < maze_rows) && (visited_grid[ny][nx] != 'V') && (visited_grid[ny][nx] != 'G') && (visited_grid[ny][nx] != 'O')) {
+            Coordinate temp;
+            temp.y = ny;
+            temp.x = nx;
+            dir = ndir;
+            if (visited_grid[temp.y][temp.x] == 'G'&& !has_visited_goal[temp.y][temp.x]) {
+              count_goal++;
+              has_visited_goal[temp.y][temp.x] = true;
+              if (count_goal == int_input_goals) {
+                success = true;
+                if (!path.isEmpty())  {
+                 path.pop();
+                }
+                bestRoutine(path);
+                return;
+              }
+            } else {
+              if (visited_grid[temp.y][temp.x] != 'G') visited_grid[temp.y][temp.x]= 'V';
+            }
+       
+            path.push(temp);
+            moved = true;
+            break;
+          }
+        }
+        if (!moved) {
+          path.pop();
+        }
+
+
+      }
+      success = false;
   
     }
     void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
@@ -234,12 +329,45 @@ class Maze {
         } 
         
       }
-      
-
-
     }
 
     void taskTwo() { // 從左上角出發(依照指定行走模式)走過 N 個目標的一條路徑
+      int int_goal_input;
+      bool success = false;
+      std::string goal_input;
+      while (1) {
+        std::cout << "Number of G (goals): ";
+        goal_input = ReadInput();
+        
+        if (isNonNegInt(goal_input)) {
+          int_goal_input = std::stoi(goal_input);
+          if (int_goal_input < 1 || int_goal_input > 100) {
+            std::cout << "### The number must be in [1,100] ###\n\n";
+            continue;
+          }
+          break;
+        } else {
+          printf("\n");
+          continue;
+        }
+      }
+      Dfs2(int_goal_input, success);
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          std::cout << visited_grid[i][j];
+        }
+        printf("\n");
+      } 
+      printf("\n");
+      if (success) {
+        for (int i = 0; i < maze_rows; i++) {
+          for (int j = 0; j < maze_columns; j++) {
+            std::cout << route_grid[i][j];
+          }
+          printf("\n");
+        } 
+        
+      }
         
     }
 
@@ -263,16 +391,24 @@ int main() {
     if (cmd == "0") {
       return 0;
     } else if (cmd == "1") {
-      if (!maze1_is_empty) maze1.resetMaze();
+      if (!maze1_is_empty) maze1.deleteMaze();
       if (maze1.fetchFile()) {
         maze1_is_empty = false;
         maze1.taskOne();
       }
       
     } else if (cmd == "2") {
+      if (!maze1_is_empty) {
+        maze1.taskTwo();
+      } else {
+        std::cout << "### Execute command 1 to load a maze! ###\n";
+      }
       
     } else if (cmd == "3") {
-      
+      if (!maze1_is_empty) {
+        maze1.taskTwo();
+      }
+      std::cout << "### Execute command 1 to load a maze! ###\n";
       
     } else if (cmd == "4") {
       
@@ -294,7 +430,22 @@ std::string ReadInput() {
   }
   return input;
 }
-
+bool isNonNegInt (std::string s) {
+  bool hasDigit = false;
+  int i = 0;
+  if (s[i] == '+') {
+    i++;
+    if (s.size() == 1) return false; // 單獨一個符號不行
+  }
+  for (; i < s.size(); i++) {
+    if (s[i] >= '0' && s[i] <= '9') {
+       hasDigit = true; // 至少有一個數字
+    }  else return false; // 任何其他字元都不允許
+        
+  }
+    // 最後要至少有一個數字
+  return hasDigit;
+}
 
 void SkipSpace(std::string &str) {
   for (int i = 0; i < str.size(); i++) {
