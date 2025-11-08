@@ -316,6 +316,58 @@ class Maze {
       }
   
     }
+    void Dfs3(int &total_goal) { // for task 3
+      resetVisitRoutine();
+      Stack path;
+      Coordinate start;
+      start.y = 0;
+      start.x = 0;// y first, then x    
+      path.push(start);  
+      int dx[4] = {1, 0, -1, 0}; // 右下左上
+      int dy[4] = {0, 1, 0, -1};  
+  
+      int dir = 0; //右邊開始
+    
+      while (!path.isEmpty()) {
+        Coordinate cur;
+        path.getTop(cur);
+        
+        if (visited_grid[cur.y][cur.x] == 'G') {
+          total_goal++;
+        }
+        visited_grid[cur.y][cur.x] = 'V';
+        bool moved = false;
+        for (int i = 0; i < 4; i++) {
+          int ndir = (dir + i) % 4;
+          
+          int nx = cur.x + dx[ndir];
+          int ny = cur.y + dy[ndir];
+          
+          if ((0 <= nx && nx < maze_columns) && (0 <= ny && ny < maze_rows) && (visited_grid[ny][nx] != 'V') &&(visited_grid[ny][nx] != 'O')) {
+            Coordinate temp;
+            temp.y = ny;
+            temp.x = nx;
+            dir = ndir;
+            if (visited_grid[temp.y][temp.x] == 'G') {
+              total_goal++;
+            } 
+            visited_grid[temp.y][temp.x]= 'V';
+            path.push(temp);
+            moved = true;
+            break;
+          }
+        }
+        if (!moved) {
+          path.pop();
+        }
+      }
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          if (maze_grid[i][j] == 'G') visited_grid[i][j] = 'G';
+        }
+      }
+  
+    }
     void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
       Dfs();
       for (int i = 0; i < maze_rows; i++) {
@@ -324,8 +376,9 @@ class Maze {
         }
         printf("\n");
       } 
-      printf("\n");
+      
       if (can_go_to_goal) {
+        printf("\n");
         for (int i = 0; i < maze_rows; i++) {
           for (int j = 0; j < maze_columns; j++) {
             std::cout << route_grid[i][j];
@@ -347,7 +400,7 @@ class Maze {
         if (isNonNegInt(goal_input)) {
           int_goal_input = std::stoi(goal_input);
           if (int_goal_input < 1 || int_goal_input > 100) {
-            std::cout << "### The number must be in [1,100] ###\n\n";
+            std::cout << "\n### The number must be in [1,100] ###\n\n";
             continue;
           }
           break;
@@ -363,8 +416,9 @@ class Maze {
         }
         printf("\n");
       } 
-      printf("\n");
+      
       if (success) {
+        printf("\n");
         for (int i = 0; i < maze_rows; i++) {
           for (int j = 0; j < maze_columns; j++) {
             std::cout << route_grid[i][j];
@@ -376,7 +430,16 @@ class Maze {
     }
 
     void taskThree() { // 從左上角出發(依照指定行走模式)走過所有目標 G 以計算總數
-        
+        int total_goal = 0;
+        Dfs3(total_goal);
+        for (int i = 0; i < maze_rows; i++) {
+          for (int j = 0; j < maze_columns; j++) {
+            std::cout << visited_grid[i][j];
+          }
+          printf("\n");
+        } 
+        std::cout << "\nThe maze has " << total_goal << " goal(s) in total.\n\n";
+
     }
 
     void taskFourne() { // 從左上角出發走到目標 G 的一條最短路徑
@@ -387,14 +450,13 @@ int main() {
   Maze maze1; // for task1, 2, 3
   bool maze1_is_empty = true;
   while (true) {
-    
-    
     PrintTitle();
     std::string cmd = ReadInput();
-    printf("\n");
+    
     if (cmd == "0") {
       return 0;
     } else if (cmd == "1") {
+      std::cout << std::endl;
       if (!maze1_is_empty) maze1.deleteMaze();
       if (maze1.fetchFile()) {
         maze1_is_empty = false;
@@ -402,18 +464,22 @@ int main() {
       }
       continue;
     } else if (cmd == "2") {
+      std::cout << std::endl;
       if (!maze1_is_empty) {
         maze1.taskTwo();
-        continue;
       } else {
-        std::cout << "### Execute command 1 to load a maze! ###\n";
+        std::cout << "### Execute command 1 to load a maze! ###";
       }
-      
+      std::cout << std::endl;
+      continue;
     } else if (cmd == "3") {
       if (!maze1_is_empty) {
-        maze1.taskTwo();
+        maze1.taskThree();
+        continue;
+      } else {
+        std::cout << "\n### Execute command 1 to load a maze! ###\n";
       }
-      std::cout << "### Execute command 1 to load a maze! ###\n";
+      
       
     } else if (cmd == "4") {
       
