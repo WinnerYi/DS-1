@@ -23,11 +23,11 @@ bool isNonNegInt (std::string s);
 
 
 // Class Declaration
-/*
+
 class Queue {
  private: 
   struct QueueNode {
-   //QueueItemType item;
+   Coordinate coordinate_item;
    QueueNode *next;
   }; // end QueueNode
   QueueNode *backPtr;
@@ -37,13 +37,11 @@ class Queue {
   Queue(const Queue& Q);
   ~Queue();
   bool isEmpty() const; // Queue operations
-  void enqueue(const QueueItemType& newItem);
+  void enqueue(const Coordinate& newItem);
   void dequeue();
-  void dequeue(QueueItemType& queueFront);
-  void getFront(QueueItemType& queueFront) const;
-  
-  
-}; */
+  void dequeue(Coordinate& queueFront);
+  void getFront(Coordinate& queueFront) const;
+}; 
 
 class Stack{
  private:
@@ -65,17 +63,17 @@ class Stack{
   void pop(Coordinate& stackTop);
 }; // end Stack
 class Maze {
- private:
-  char **maze_grid; // 採用 C++標準函式 new 動態配置陣列以儲存迷宮。
-  char **visited_grid;
-  char **route_grid;
-  bool can_go_to_goal = false;
-  int maze_rows;
-  int maze_columns;
- public:
+  private:
+    char **maze_grid; // 採用 C++標準函式 new 動態配置陣列以儲存迷宮。
+    char **visited_grid;
+    char **route_grid;
+    bool can_go_to_goal = false;
+    int maze_rows;
+    int maze_columns;
+  public:
     Maze() {}
     ~Maze() {
-      deleteMaze();
+      // deleteMaze();
     }
     void deleteMaze() {
       for (int i = 0; i < maze_rows; i++) {
@@ -113,7 +111,7 @@ class Maze {
       std::string txt_path = "input" + file_num + ".txt";
       in.open(txt_path);
       if(in.fail()){ 
-        std::cout << std::endl << txt_path + " does not exist!\n";
+        std::cout << std::endl << txt_path + " does not exist!\n" << std::endl;
         return false; 
       }
       in >>  maze_columns >> maze_rows;
@@ -153,7 +151,7 @@ class Maze {
       path.push(start);  
       int dx[4] = {1, 0, -1, 0}; // 右下左上
       int dy[4] = {0, 1, 0, -1};  
-  
+
       int dir = 0; //右邊開始
     
       while (!path.isEmpty()) {
@@ -198,8 +196,6 @@ class Maze {
         if (!moved) {
           path.pop();
         }
-
-
       }
       can_go_to_goal = false;
     }
@@ -219,7 +215,7 @@ class Maze {
       path.push(start);  
       int dx[4] = {1, 0, -1, 0}; // 右下左上
       int dy[4] = {0, 1, 0, -1};  
-  
+
       int dir = 0; //右邊開始
     
       while (!path.isEmpty()) {
@@ -234,10 +230,9 @@ class Maze {
             if (!path.isEmpty())  {
               path.pop();
             }
-          bestRoutine(path);
-          return;
+            bestRoutine(path);
+            return;
           }
-          
         }
         visited_grid[cur.y][cur.x] = 'V';
         bool moved = false;
@@ -272,8 +267,6 @@ class Maze {
         if (!moved) {
           path.pop();
         }
-
-
       }
       success = false;
       for (int i = 0; i < maze_rows; i++) {
@@ -281,7 +274,6 @@ class Maze {
           if (maze_grid[i][j] == 'G') visited_grid[i][j] = 'G';
         }
       }
-  
     }
     void Dfs3(int &total_goal) { // for task 3
       resetVisitRoutine();
@@ -292,7 +284,7 @@ class Maze {
       path.push(start);  
       int dx[4] = {1, 0, -1, 0}; // 右下左上
       int dy[4] = {0, 1, 0, -1};  
-  
+
       int dir = 0; //右邊開始
     
       while (!path.isEmpty()) {
@@ -333,7 +325,83 @@ class Maze {
           if (maze_grid[i][j] == 'G') visited_grid[i][j] = 'G';
         }
       }
+    }
+    void Bfs() { // for task4
+      Queue q;
+      Coordinate start;
+      start.y = 0;
+      start.x = 0;// y first, then x  
+      q.enqueue(start);
+
+      int dx[4] = {1, 0, -1, 0}; // 右下左上
+      int dy[4] = {0, 1, 0, -1};
+
+      int dist[maze_rows][maze_columns];
+      Coordinate prev[maze_rows][maze_columns];
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          dist[i][j] = -1;
+          prev[i][j].y = -1;
+          prev[i][j].x = -1;
+        }
+      }
+      dist[start.y][start.x] = 1;
+      visited_grid[start.y][start.x] = 'V';
+      Coordinate goal;
+      while (!q.isEmpty()) {
+        Coordinate cur;
+        q.dequeue(cur);
+
+        if (visited_grid[cur.y][cur.x] == 'G') {
+          can_go_to_goal = true;
+          goal = cur;
+          break;
+        }
+
+        for (int k = 0; k < 4; k++) {
+          int ny = cur.y + dy[k];
+          int nx = cur.x + dx[k];
+          if (ny >= 0 && ny < maze_rows && nx >= 0 && nx < maze_columns &&
+              (maze_grid[ny][nx] == 'E' || maze_grid[ny][nx] == 'G') &&
+              dist[ny][nx] == -1) {
+            dist[ny][nx] = dist[cur.y][cur.x] + 1;
+            prev[ny][nx] = cur;
+            Coordinate temp;
+            temp.y = ny;
+            temp.x = nx;
+            q.enqueue(temp);
+            if (visited_grid[ny][nx] != 'G')
+              visited_grid[ny][nx] = 'V';
+          }
+        }
+      }
   
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          std::cout << visited_grid[i][j];
+        }
+        printf("\n");
+      }
+      if (can_go_to_goal) {
+        printf("\n");
+        Coordinate cur = goal;
+        while (!(cur.y == -1 && cur.x == -1)) {
+          if (visited_grid[cur.y][cur.x] != 'G')
+            route_grid[cur.y][cur.x] = 'R';
+          cur = prev[cur.y][cur.x];
+        }
+        for (int i = 0; i < maze_rows; i++) {
+          for (int j = 0; j < maze_columns; j++) {
+            std::cout << route_grid[i][j];
+          }
+          printf("\n");
+        }
+        printf("\n");
+        std::cout << "Shortest path length = " << dist[goal.y][goal.x];
+        printf("\n\n");
+      } else {
+        std::cout << "\n\n### There is no path to find a goal! ### \n" << std::endl;
+      }
     }
     void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
       Dfs();
@@ -397,24 +465,24 @@ class Maze {
     }
 
     void taskThree() { // 從左上角出發(依照指定行走模式)走過所有目標 G 以計算總數
-        int total_goal = 0;
-        Dfs3(total_goal);
-        for (int i = 0; i < maze_rows; i++) {
-          for (int j = 0; j < maze_columns; j++) {
-            std::cout << visited_grid[i][j];
-          }
-          printf("\n");
-        } 
-        std::cout << "\nThe maze has " << total_goal << " goal(s) in total.\n\n";
-
+      int total_goal = 0;
+      Dfs3(total_goal);
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          std::cout << visited_grid[i][j];
+        }
+        printf("\n");
+      } 
+      std::cout << "\nThe maze has " << total_goal << " goal(s) in total.\n\n";
     }
 
-    void taskFourne() { // 從左上角出發走到目標 G 的一條最短路徑
-        
+    void taskFour() { // 從左上角出發走到目標 G 的一條最短路徑
+      Bfs();
     }
 };
 int main() {
   Maze maze1; // for task1, 2, 3
+  Maze maze4; // for task4
   bool maze1_is_empty = true;
   while (true) {
     PrintTitle();
@@ -424,7 +492,10 @@ int main() {
       return 0;
     } else if (cmd == "1") {
       std::cout << std::endl;
-      if (!maze1_is_empty) maze1.deleteMaze();
+      if (!maze1_is_empty) {
+        maze1.deleteMaze();
+        maze1_is_empty = true;
+      }
       if (maze1.fetchFile()) {
         maze1_is_empty = false;
         maze1.taskOne();
@@ -446,35 +517,45 @@ int main() {
       } else {
         std::cout << "\n### Execute command 1 to load a maze! ###\n";
       }
-      
-      
     } else if (cmd == "4") {
-      
+      std::cout << std::endl;
+      if (maze4.fetchFile()) {
+        maze4.taskFour();
+        maze4.deleteMaze();
+      } 
+      continue;
     } else {
+      printf("\n");
       std::cout << "Command does not exist!\n";
     }
     printf("\n");  
   }
 
 }
-/*
+
 Queue::Queue() {
-    backPtr = NULL;   // 佇列尾端指標一開始沒有指向任何節點
-    frontPtr = NULL;  // 佇列前端指標一開始也沒有指向任何節點
+  backPtr = NULL;   // 佇列尾端指標一開始沒有指向任何節點
+  frontPtr = NULL;  // 佇列前端指標一開始也沒有指向任何節點
+}
+
+Queue::~Queue() {
+  while (!isEmpty()) { // 只要還有節點就刪除
+    dequeue();
+  }
 }
 
 bool Queue::isEmpty() const{
     // 如果尾端指標是 NULL，代表佇列裡沒有任何節點
-    if (backPtr == NULL)
-        return true;
-    else
-        return false;
+  if (backPtr == NULL)
+    return true;
+  else
+   return false;
 }
 
 
-void Queue::enqueue(const QueueItemType& newItem){
+void Queue::enqueue(const Coordinate& newItem){
     QueueNode* newPtr = new QueueNode;  // 用 new 建立新節點
-    newPtr->item = newItem;              // 把新資料放進節點裡
+    newPtr->coordinate_item = newItem;              // 把新資料放進節點裡
     newPtr->next = NULL;                 // 新節點的下一個節點目前沒有（設成 NULL）
 
     if (isEmpty()) {
@@ -488,9 +569,9 @@ void Queue::enqueue(const QueueItemType& newItem){
     backPtr = newPtr;  // 現在新的節點變成佇列尾端
 }
 
-void Queue::dequeue() throw(QueueException){
+void Queue::dequeue() {
     if (isEmpty())
-        throw QueueException("QueueException: Cannot dequeue from an empty queue.");
+        throw std::runtime_error("Queue is empty, cannot dequeue.");
     else {
         QueueNode* tempPtr = frontPtr;   // 
         //  如果佇列裡只有一個節點
@@ -509,20 +590,19 @@ void Queue::dequeue() throw(QueueException){
     }
 }
 
-void Queue::getFront(QueueItemType& queueFront) const {
-    if (isEmpty())
-        throw QueueException("QueueException: Queue is empty, cannot get front item.");
-
-    // 否則，把前端節點的資料取出放進參數
-    queueFront = frontPtr->item;
-}
-
-void Queue::dequeue(QueueItemType& queueFront){
+void Queue::getFront(Coordinate& queueFront) const {
     if (isEmpty())
         throw std::runtime_error("Queue is empty, cannot dequeue.");
-    queueFront = frontPtr->item;
+    // 否則，把前端節點的資料取出放進參數
+    queueFront = frontPtr->coordinate_item;
+}
+
+void Queue::dequeue(Coordinate& queueFront){
+    if (isEmpty())
+        throw std::runtime_error("Queue is empty, cannot dequeue.");
+    queueFront = frontPtr->coordinate_item;
     dequeue();
-} */
+} 
 Stack::Stack(const Stack& aStack) {
   if (aStack.topPtr == NULL) {
     topPtr = NULL; // original list is empty
