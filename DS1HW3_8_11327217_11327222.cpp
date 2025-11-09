@@ -21,7 +21,30 @@ void SkipSpace(std::string &str);
 std::string ReadInput();
 bool isNonNegInt (std::string s);
 
+
 // Class Declaration
+/*
+class Queue {
+ private: 
+  struct QueueNode {
+   //QueueItemType item;
+   QueueNode *next;
+  }; // end QueueNode
+  QueueNode *backPtr;
+  QueueNode *frontPtr;
+ public: 
+  Queue(); // Constructors and destructor
+  Queue(const Queue& Q);
+  ~Queue();
+  bool isEmpty() const; // Queue operations
+  void enqueue(const QueueItemType& newItem);
+  void dequeue();
+  void dequeue(QueueItemType& queueFront);
+  void getFront(QueueItemType& queueFront) const;
+  
+  
+}; */
+
 class Stack{
  private:
   struct StackNode{ 
@@ -29,73 +52,17 @@ class Stack{
     StackNode *next;
   }; // end StackNode
   StackNode *topPtr;
- public:
-  Stack() {
-    topPtr = nullptr;
-  }
-  Stack(const Stack& aStack) {
-    if (aStack.topPtr == NULL) {
-      topPtr = NULL; // original list is empty
-    } else {
-      topPtr = new StackNode;
-      topPtr->coordinate_item = aStack.topPtr->coordinate_item;
-      StackNode *newPtr = topPtr;
-      for (StackNode *origPtr = aStack.topPtr->next; origPtr != NULL; origPtr = origPtr->next) {
-         newPtr->next = new StackNode;
-        newPtr = newPtr->next;
-        newPtr->coordinate_item = origPtr->coordinate_item;
-      } // end for
-    newPtr->next = NULL;
-    } // end if-else
-  } // end copy construct
-  
-  ~Stack() {
-    while (!isEmpty()) {
-      pop();
-    }
-  }
-  bool isEmpty() {
-    return topPtr == NULL;
-  }
 
-  //bad_alloc 是 C++ 標準例外類別，當 new 失敗時會丟出這個例外。
-  //用 catch (bad_alloc& e) 比 catch (bad_alloc e) 好，因為：
-  //避免複製例外物件（效率更好）
-  //確保多型行為正確
-  //e.what() 會輸出錯誤訊息（通常是 "std::bad_alloc"）
-  void push(const Coordinate& newcoordinate_Item) {
-    try { 
-        StackNode *newPtr = new StackNode;
-        newPtr->coordinate_item = newcoordinate_Item;
-        newPtr->next = topPtr;
-        topPtr = newPtr;
-    } // end try
-    catch (std::bad_alloc& e) {  // ← 用參考 (&)
-        std::cerr << "記憶體配置失敗: " << e.what() << std::endl;
-    } // end catch
-}
-  void pop() {
-    if (!isEmpty()){ 
-      StackNode *temp = topPtr;
-      topPtr = topPtr->next;
-      temp->next = NULL;
-      delete temp;
-    } // end if
-  }
-  void getTop(Coordinate& stackTop) {
-    if (!isEmpty()) {
-      stackTop = topPtr->coordinate_item;
-    }
-  }
-  void pop(Coordinate& stackTop) {
-    if (!isEmpty()) {
-      stackTop = topPtr->coordinate_item;
-      StackNode *temp = topPtr;
-      topPtr = topPtr->next;
-      temp->next = NULL;
-      delete temp;
-    } // end if
-  }
+ public:
+  Stack();
+  Stack(const Stack& aStack);
+  
+  ~Stack();
+  bool isEmpty();
+  void push(const Coordinate& newcoordinate_Item);
+  void pop();
+  void getTop(Coordinate& stackTop);
+  void pop(Coordinate& stackTop);
 }; // end Stack
 class Maze {
  private:
@@ -468,7 +435,7 @@ int main() {
       if (!maze1_is_empty) {
         maze1.taskTwo();
       } else {
-        std::cout << "### Execute command 1 to load a maze! ###";
+        std::cout << "### Execute command 1 to load a maze! ###\n";
       }
       std::cout << std::endl;
       continue;
@@ -489,6 +456,140 @@ int main() {
     printf("\n");  
   }
 
+}
+/*
+Queue::Queue() {
+    backPtr = NULL;   // 佇列尾端指標一開始沒有指向任何節點
+    frontPtr = NULL;  // 佇列前端指標一開始也沒有指向任何節點
+}
+
+bool Queue::isEmpty() const{
+    // 如果尾端指標是 NULL，代表佇列裡沒有任何節點
+    if (backPtr == NULL)
+        return true;
+    else
+        return false;
+}
+
+
+void Queue::enqueue(const QueueItemType& newItem){
+    QueueNode* newPtr = new QueueNode;  // 用 new 建立新節點
+    newPtr->item = newItem;              // 把新資料放進節點裡
+    newPtr->next = NULL;                 // 新節點的下一個節點目前沒有（設成 NULL）
+
+    if (isEmpty()) {
+        // 第一個節點，同時是前端和尾端
+        frontPtr = newPtr;
+    } 
+    else {
+        // 如果不是空的，就讓原本的尾端指向新的節點
+        backPtr->next = newPtr;
+    }
+    backPtr = newPtr;  // 現在新的節點變成佇列尾端
+}
+
+void Queue::dequeue() throw(QueueException){
+    if (isEmpty())
+        throw QueueException("QueueException: Cannot dequeue from an empty queue.");
+    else {
+        QueueNode* tempPtr = frontPtr;   // 
+        //  如果佇列裡只有一個節點
+        if (frontPtr == backPtr) {
+            frontPtr = NULL;  
+            backPtr  = NULL;  
+        }
+        else {
+            // 如果有多個節點，就讓前端指向下一個節點
+            frontPtr = frontPtr->next;   
+        }
+        // 安全起見，斷開要刪除節點的連結
+        tempPtr->next = NULL;             
+        // 釋放被刪除的節點記憶體
+        delete tempPtr;                   
+    }
+}
+
+void Queue::getFront(QueueItemType& queueFront) const {
+    if (isEmpty())
+        throw QueueException("QueueException: Queue is empty, cannot get front item.");
+
+    // 否則，把前端節點的資料取出放進參數
+    queueFront = frontPtr->item;
+}
+
+void Queue::dequeue(QueueItemType& queueFront){
+    if (isEmpty())
+        throw std::runtime_error("Queue is empty, cannot dequeue.");
+    queueFront = frontPtr->item;
+    dequeue();
+} */
+Stack::Stack(const Stack& aStack) {
+  if (aStack.topPtr == NULL) {
+    topPtr = NULL; // original list is empty
+  } else {
+    topPtr = new StackNode;
+    topPtr->coordinate_item = aStack.topPtr->coordinate_item;
+    StackNode *newPtr = topPtr;
+    for (StackNode *origPtr = aStack.topPtr->next; origPtr != NULL; origPtr = origPtr->next) {
+       newPtr->next = new StackNode;
+       newPtr = newPtr->next;
+       newPtr->coordinate_item = origPtr->coordinate_item;
+    } // end for
+    newPtr->next = NULL;
+  } // end if-else
+} // end copy construct
+
+Stack::Stack() {
+    topPtr = nullptr;
+}
+
+Stack::~Stack() {
+  while (!isEmpty()) {
+    pop();
+  }
+}
+bool Stack::isEmpty() {
+  return topPtr == NULL;
+}
+//bad_alloc 是 C++ 標準例外類別，當 new 失敗時會丟出這個例外。
+  //用 catch (bad_alloc& e) 比 catch (bad_alloc e) 好，因為：
+  //避免複製例外物件（效率更好）
+  //確保多型行為正確
+  //e.what() 會輸出錯誤訊息（通常是 "std::bad_alloc"）
+void Stack::push(const Coordinate& newcoordinate_Item) {
+  try { 
+    StackNode *newPtr = new StackNode;
+    newPtr->coordinate_item = newcoordinate_Item;
+    newPtr->next = topPtr;
+    topPtr = newPtr;
+  } // end try
+   catch (std::bad_alloc& e) {  // ← 用參考 (&)
+     std::cerr << "記憶體配置失敗: " << e.what() << std::endl;
+   } // end catch
+}
+void Stack::pop() {
+  if (!isEmpty()){ 
+    StackNode *temp = topPtr;
+    topPtr = topPtr->next;
+    temp->next = NULL;
+    delete temp;
+  } // end if
+}
+
+void Stack::getTop(Coordinate& stackTop) {
+  if (!isEmpty()) {
+    stackTop = topPtr->coordinate_item;
+  }
+}
+
+void Stack:: pop(Coordinate& stackTop) {
+  if (!isEmpty()) {
+    stackTop = topPtr->coordinate_item;
+    StackNode *temp = topPtr;
+    topPtr = topPtr->next;
+    temp->next = NULL;
+    delete temp;
+  } // end if
 }
 
 std::string ReadInput() {
