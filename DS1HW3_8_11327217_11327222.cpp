@@ -347,6 +347,27 @@ class Maze {
       }
       dist[start.y][start.x] = 1;
       visited_grid[start.y][start.x] = 'V';
+      int count_right;
+      for (int i = 1; i < maze_columns; i++) {
+        if (visited_grid[0][i] == 'O') break;
+        count_right = i;
+        visited_grid[0][i] = 'V';
+        dist[0][i] = dist[0][i - 1] + 1;
+        
+        Coordinate tmp2;
+        tmp2.x = i - 1;
+        tmp2.y = 0;
+        prev[0][i] = tmp2;
+      }
+
+      for (int i = count_right; i >= 0; i--) {
+        Coordinate tmp;
+        tmp.x = i;
+        tmp.y = 0;
+        q.enqueue(tmp);
+      }
+        
+
       Coordinate goal;
       while (!q.isEmpty()) {
         Coordinate cur;
@@ -362,7 +383,7 @@ class Maze {
           int ny = cur.y + dy[k];
           int nx = cur.x + dx[k];
           if (ny >= 0 && ny < maze_rows && nx >= 0 && nx < maze_columns &&
-              (maze_grid[ny][nx] == 'E' || maze_grid[ny][nx] == 'G') &&
+              (visited_grid[ny][nx] == 'E' || visited_grid[ny][nx] == 'G') &&
               dist[ny][nx] == -1) {
             dist[ny][nx] = dist[cur.y][cur.x] + 1;
             prev[ny][nx] = cur;
@@ -403,6 +424,7 @@ class Maze {
         std::cout << "\n\n### There is no path to find a goal! ### \n" << std::endl;
       }
     }
+
     void taskOne() { // 從左上角出發(依照指定行走模式)走到目標 G 的一條路徑
       Dfs();
       for (int i = 0; i < maze_rows; i++) {
