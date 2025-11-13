@@ -326,6 +326,160 @@ class Maze {
         }
       }
     }
+
+
+
+
+
+    void Dfs4() { // for task 4 (test) + backtracking
+     int count_path = 0;
+      Stack path;
+      Coordinate start;
+      start.y = 0;
+      start.x = 0;// y first, then x    
+      path.push(start);  
+      bool visited[maze_rows][maze_columns];
+      int dx[4] = {1, 0, -1, 0}; // 右下左上
+      int dy[4] = {0, 1, 0, -1};  
+      int dir = 0; //右邊開始
+      int dist[maze_rows][maze_columns];
+      Coordinate prev[maze_rows][maze_columns];
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          dist[i][j] = 0;
+          prev[i][j].y = -1;
+          prev[i][j].x = -1;
+          visited[i][j] = false;
+        }
+      }
+      dist[start.y][start.x] = 1;
+      visited_grid[0][0] = 'V';
+      visited[0][0] = true;
+      Coordinate cur; 
+      
+      while (!path.isEmpty()) {
+        path.getTop(cur);
+        bool moved = false;
+        for (int i = 0; i < 4; i++) {
+          int ndir = (dir + i) % 4;
+          int nx = cur.x + dx[ndir];
+          int ny = cur.y + dy[ndir];
+          if ((0 <= nx && nx < maze_columns) && (0 <= ny && ny < maze_rows) && (visited_grid[ny][nx] == 'E' || visited_grid[ny][nx] == 'G')) {
+            Coordinate next;
+            next.y = ny;
+            next.x = nx;
+            visited[ny][nx] = true;
+            dir = ndir;
+            prev[ny][nx] = cur;
+            dist[ny][nx] = dist[cur.y][cur.x] + 1;
+            count_path++;
+
+            if (visited_grid[next.y][next.x] == 'G') {
+              can_go_to_goal = true;
+              break;
+              
+            } else {
+              if (visited_grid[ny][nx] != 'G'){
+                visited_grid[ny][nx] = 'V';
+              }
+            }
+            path.push(next);
+            moved = true;
+            break;
+          }
+        }
+        if (can_go_to_goal) break;
+        if (!moved) {
+          path.pop();
+        }
+      }
+
+      int dist_temp[maze_rows][maze_columns];
+      for (int i = 0; i < maze_rows; i++) {
+          for (int j = 0; j < maze_columns; j++) {
+            dist_temp[i][j] =  dist[i][j];
+          }
+      }
+
+      dir = 0;
+      while (!path.isEmpty()) { 
+        /*for (int i = 0; i < maze_rows; i++) {
+          for (int j = 0; j < maze_columns; j++) {
+            if (dist_temp[i][j] != 0)  dist[i][j] = dist_temp[i][j];
+          }
+        }*/
+        /*for (int i = 0; i < maze_rows; i++) {
+          for (int j = 0; j < maze_columns; j++) {
+            std::cout << dist[i][j] << "    ";
+          }
+          printf("\n");
+        }*/
+       
+        bool moved = false;   
+        path.getTop(cur);
+        if (dist[cur.y][cur.x] >= count_path) {
+          path.pop();
+          continue;
+        }
+        
+        for (int i = 0; i < 4; i++) {
+          int ndir = (dir + i) % 4;
+          int nx = cur.x + dx[ndir];
+          int ny = cur.y + dy[ndir];
+          
+
+          if ((0 <= nx && nx < maze_columns) && (0 <= ny && ny < maze_rows) &&
+          ((visited_grid[ny][nx] == 'E' || visited_grid[ny][nx] == 'G') ||
+         (visited_grid[ny][nx] == 'V' && 
+        ((dist[ny][nx] - dist[cur.y][cur.x]) != 1 && (dist[ny][nx] - dist[cur.y][cur.x]) != -1 && dist_temp[ny][nx] == 0)))) {
+
+            Coordinate next;
+            next.y = ny;
+            next.x = nx;
+            dir = ndir;
+            dist[ny][nx] = dist[cur.y][cur.x] + 1;
+         
+
+            if (visited_grid[next.y][next.x] == 'G' ) {
+              if (dist[cur.y][cur.x] < count_path) {
+                count_path = dist[cur.y][cur.x];
+              }
+              moved = true;
+            } else {
+              
+              visited_grid[ny][nx] = 'V';
+              
+            }
+            if (dist[ny][nx] < count_path) {
+               moved = true;
+               path.push(next);
+               break;
+            }
+          }
+        }
+        if (!moved) {
+          path.pop();
+        }
+
+     }
+      for (int i = 0; i < maze_rows; i++) {
+        for (int j = 0; j < maze_columns; j++) {
+          std::cout << visited_grid[i][j];
+        }
+        printf("\n");
+      }
+    }
+    void assist_Dfs4 () {
+
+
+
+
+    }
+
+
+
+
+
     void Bfs() { // for task4
       Queue q;
       Coordinate start;
@@ -333,8 +487,8 @@ class Maze {
       start.x = 0;// y first, then x  
       q.enqueue(start);
 
-      int dx[4] = {1, 0, -1, 0}; // 右下左上
-      int dy[4] = {0, 1, 0, -1};
+      int dx[4] = {-1, 0, 1, 0}; 
+      int dy[4] = {0, -1, 0, 1};
 
       int dist[maze_rows][maze_columns];
       Coordinate prev[maze_rows][maze_columns];
@@ -347,27 +501,6 @@ class Maze {
       }
       dist[start.y][start.x] = 1;
       visited_grid[start.y][start.x] = 'V';
-      int count_right;
-      for (int i = 1; i < maze_columns; i++) {
-        if (visited_grid[0][i] == 'O') break;
-        count_right = i;
-        visited_grid[0][i] = 'V';
-        dist[0][i] = dist[0][i - 1] + 1;
-        
-        Coordinate tmp2;
-        tmp2.x = i - 1;
-        tmp2.y = 0;
-        prev[0][i] = tmp2;
-      }
-
-      for (int i = count_right; i >= 0; i--) {
-        Coordinate tmp;
-        tmp.x = i;
-        tmp.y = 0;
-        q.enqueue(tmp);
-      }
-        
-
       Coordinate goal;
       while (!q.isEmpty()) {
         Coordinate cur;
@@ -397,12 +530,6 @@ class Maze {
         }
       }
   
-      for (int i = 0; i < maze_rows; i++) {
-        for (int j = 0; j < maze_columns; j++) {
-          std::cout << visited_grid[i][j];
-        }
-        printf("\n");
-      }
       if (can_go_to_goal) {
         printf("\n");
         Coordinate cur = goal;
@@ -499,6 +626,8 @@ class Maze {
     }
 
     void taskFour() { // 從左上角出發走到目標 G 的一條最短路徑
+      Dfs4();
+      resetVisitRoutine();
       Bfs();
     }
 };
@@ -554,6 +683,8 @@ int main() {
   }
 
 }
+
+// QUENE 跟 Stack 都是來自老師的簡報
 
 Queue::Queue() {
   backPtr = NULL;   // 佇列尾端指標一開始沒有指向任何節點
