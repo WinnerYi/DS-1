@@ -687,18 +687,18 @@ int main() {
 // QUENE 跟 Stack 都是來自老師的簡報
 
 Queue::Queue() {
-  backPtr = NULL;   // 佇列尾端指標一開始沒有指向任何節點
-  frontPtr = NULL;  // 佇列前端指標一開始也沒有指向任何節點
+  backPtr = NULL;   
+  frontPtr = NULL;  
 }
 
 Queue::~Queue() {
-  while (!isEmpty()) { // 只要還有節點就刪除
+  while (!isEmpty()) { 
     dequeue();
   }
 }
 
 bool Queue::isEmpty() const{
-    // 如果尾端指標是 NULL，代表佇列裡沒有任何節點
+   
   if (backPtr == NULL)
     return true;
   else
@@ -707,19 +707,19 @@ bool Queue::isEmpty() const{
 
 
 void Queue::enqueue(const Coordinate& newItem){
-    QueueNode* newPtr = new QueueNode;  // 用 new 建立新節點
-    newPtr->coordinate_item = newItem;              // 把新資料放進節點裡
-    newPtr->next = NULL;                 // 新節點的下一個節點目前沒有（設成 NULL）
+    QueueNode* newPtr = new QueueNode;  
+    newPtr->coordinate_item = newItem;              
+    newPtr->next = NULL;                 
 
     if (isEmpty()) {
-        // 第一個節點，同時是前端和尾端
+      
         frontPtr = newPtr;
     } 
     else {
-        // 如果不是空的，就讓原本的尾端指向新的節點
+       
         backPtr->next = newPtr;
     }
-    backPtr = newPtr;  // 現在新的節點變成佇列尾端
+    backPtr = newPtr; 
 }
 
 void Queue::dequeue() {
